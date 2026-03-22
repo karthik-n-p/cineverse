@@ -150,8 +150,8 @@ function spiralCoord(index: number): [number, number] {
 const BLOCK_SIZE = 4;     // 4x4 buildings per city block
 const LOT_W = 38;        // lot width  (X axis) — tighter packing
 const LOT_D = 32;        // lot depth  (Z axis) — tighter packing
-const ALLEY_W = 3;       // narrow gap between buildings within a block
-const STREET_W = 12;     // street between blocks (within a district)
+const ALLEY_W = 10;      // wider gap between buildings within a block
+const STREET_W = 32;     // grand streets between blocks (within a district)
 
 // Derived: total block footprint
 const BLOCK_FOOTPRINT_X = BLOCK_SIZE * LOT_W + (BLOCK_SIZE - 1) * ALLEY_W; // 4*38 + 3*3 = 161
@@ -597,6 +597,28 @@ export function generateCityLayout(devs: DeveloperRecord[]): {
     });
 
     const lampSeed = seedIdx * 1000 + 31;
+
+    // Road Markings and Main Street Cars
+    const numStripes = Math.floor(BLOCK_FOOTPRINT_Z / 20) + 2;
+    for (let s = 0; s < numStripes; s++) {
+      const zOffset = (s - numStripes/2) * 20;
+      // Vertical streets
+      decorations.push({ type: 'roadMarking', position: [blockCX + BLOCK_FOOTPRINT_X / 2 + STREET_W / 2, 0.1, blockCZ + zOffset], rotation: 0, variant: 0, size: [1.5, 8] });
+      // Horizontal streets
+      decorations.push({ type: 'roadMarking', position: [blockCX + zOffset, 0.1, blockCZ + BLOCK_FOOTPRINT_Z / 2 + STREET_W / 2], rotation: Math.PI / 2, variant: 0, size: [1.5, 8] });
+      
+      // Cars on vertical main streets (two lanes)
+      if (seededRandom(lampSeed + s) > 0.2) {
+        decorations.push({ type: 'car', position: [blockCX + BLOCK_FOOTPRINT_X / 2 + STREET_W / 2 - 6, 0.1, blockCZ + zOffset + 5], rotation: 0, variant: Math.floor(seededRandom(lampSeed + s + 1)*4) });
+        decorations.push({ type: 'car', position: [blockCX + BLOCK_FOOTPRINT_X / 2 + STREET_W / 2 + 6, 0.1, blockCZ + zOffset - 5], rotation: Math.PI, variant: Math.floor(seededRandom(lampSeed + s + 2)*4) });
+      }
+      // Cars on horizontal main streets (two lanes)
+      if (seededRandom(lampSeed + s + 10) > 0.2) {
+        decorations.push({ type: 'car', position: [blockCX + zOffset + 5, 0.1, blockCZ + BLOCK_FOOTPRINT_Z / 2 + STREET_W / 2 + 6], rotation: -Math.PI / 2, variant: Math.floor(seededRandom(lampSeed + s + 3)*4) });
+        decorations.push({ type: 'car', position: [blockCX + zOffset - 5, 0.1, blockCZ + BLOCK_FOOTPRINT_Z / 2 + STREET_W / 2 - 6], rotation: Math.PI / 2, variant: Math.floor(seededRandom(lampSeed + s + 4)*4) });
+      }
+    }
+
     const lampCount = 2 + Math.floor(seededRandom(lampSeed * 311) * 3);
     for (let li = 0; li < lampCount; li++) {
       const seed = lampSeed * 5000 + li;
@@ -613,14 +635,15 @@ export function generateCityLayout(devs: DeveloperRecord[]): {
 
     for (let bi = 0; bi < blockDevs.length; bi++) {
       const bld = buildings[buildings.length - blockDevs.length + bi];
+      // Cars parked or driving down inner alleys
       const carSeed = hashStr(blockDevs[bi].github_login) + 777;
-      if (seededRandom(carSeed) > 0.6) {
+      if (seededRandom(carSeed) > 0.4) {
         const side = seededRandom(carSeed + 1) > 0.5 ? 1 : -1;
-        const carX = bld.position[0] + side * (bld.width / 2 + 6);
+        const carX = bld.position[0] + side * (bld.width / 2 + ALLEY_W / 2 - 1);
         decorations.push({
           type: 'car',
-          position: [carX, 0, bld.position[2]],
-          rotation: seededRandom(carSeed + 2) > 0.5 ? 0 : Math.PI,
+          position: [carX, 0.1, bld.position[2] + (seededRandom(carSeed + 4) - 0.5) * 10],
+          rotation: side === 1 ? 0 : Math.PI,
           variant: Math.floor(seededRandom(carSeed + 3) * 4),
         });
       }

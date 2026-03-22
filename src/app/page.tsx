@@ -513,9 +513,27 @@ function HomeContent() {
       if (f.sort_by) params.set("sort_by", f.sort_by);
       params.set("pages", "25");
 
-      const res = await fetch(`/api/movies?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch movies");
-      const data = await res.json();
+      const cacheUrl = `/api/movies?${params.toString()}`;
+      let data;
+      try {
+        const cache = await caches.open("cineverse-cache");
+        const cachedRes = await cache.match(cacheUrl);
+        if (cachedRes) {
+          data = await cachedRes.json();
+          // Fetch in background to keep cache fresh for next time
+          fetch(cacheUrl).then(r => { if (r.ok) cache.put(cacheUrl, r.clone()) }).catch(() => {});
+        } else {
+          const res = await fetch(cacheUrl);
+          if (!res.ok) throw new Error("Failed to fetch movies");
+          await cache.put(cacheUrl, res.clone());
+          data = await res.json();
+        }
+      } catch (e) {
+        // Fallback if caches API is unavailable (e.g. some incognito modes)
+        const res = await fetch(cacheUrl);
+        if (!res.ok) throw new Error("Failed to fetch movies");
+        data = await res.json();
+      }
 
       const devs = data.developers as DeveloperRecord[];
       if (devs.length > 0) {

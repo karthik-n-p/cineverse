@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import {
   discoverMovies,
   fetchGenres,
@@ -78,7 +79,7 @@ function movieToDeveloperRecord(movie: TMDBMovie, index: number, genreMap: Map<n
   };
 }
 
-// ─── GET /api/movies ─────────────────────────────────────────
+// ─── GET /api/movies (Supabase Cached Version) ──────────────────
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -86,12 +87,10 @@ export async function GET(request: Request) {
   const language = searchParams.get("language");
   const country = searchParams.get("country");
   const sortBy = searchParams.get("sort_by");
-  // Fetch up to 25 pages by default (500 movies) to fill the city
-  const pages = Math.min(30, Math.max(1, parseInt(searchParams.get("pages") || "25", 10)));
-  const metaOnly = searchParams.get("meta"); // If ?meta=1, return only genres/languages/countries
+  const metaOnly = searchParams.get("meta"); 
 
   try {
-    // If meta-only request, return filter options
+    // If meta-only request, return filter options from TMDB
     if (metaOnly === "1") {
       const [genres, languages, countries] = await Promise.all([
         fetchGenres(),
@@ -104,75 +103,56 @@ export async function GET(request: Request) {
       );
     }
 
-    const filters: MovieFilters = {
-      genre: genre ? parseInt(genre, 10) : undefined,
-      language: language || undefined,
-      country: country || undefined,
-      sort_by: sortBy || "popularity.desc",
-    };
-
-    // Fetch genres for name mapping
+    // Fetch genres for mapping (required by movieToDeveloperRecord)
     const genres = await fetchGenres();
     const genreMap = new Map(genres.map((g) => [g.id, g.name]));
 
-    // Fetch multiple pages of movies in parallel (for a denser city)
-    const pagePromises = [];
-    for (let p = 1; p <= pages; p++) {
-      pagePromises.push(discoverMovies({ ...filters, page: p }));
-    }
-    const pageResults = await Promise.all(pagePromises);
+    const sb = getSupabaseAdmin();
+    
+    // Start building Query
+    let query = sb.from("movies").select("*");
 
-    // Merge and deduplicate
-    const seenIds = new Set<number>();
-    const allMovies: TMDBMovie[] = [];
-    for (const result of pageResults) {
-      for (const movie of result.results) {
-        if (!seenIds.has(movie.id)) {
-          seenIds.add(movie.id);
-          allMovies.push(movie);
-        }
-      }
+    // Apply Sorting
+    if (sortBy === "vote_average.desc") {
+      query = query.order("vote_average", { ascending: false });
+    } else if (sortBy === "release_date.desc") {
+      query = query.order("release_date", { ascending: false });
+    } else {
+      query = query.order("popularity", { ascending: false });
+    }
+    
+    // Apply Filters
+    if (language) {
+      query = query.eq("original_language", language);
+    }
+    if (genre) {
+      query = query.contains("genre_ids", `[${parseInt(genre, 10)}]`);
+    }
+    
+    // Target scaling up to thousands of movies for the 3D visualizer
+    query = query.limit(3000);
+
+    const { data: allMovies, error } = await query;
+
+    if (error) {
+       console.error("Supabase query error:", error);
+       throw error;
     }
 
     // Convert to DeveloperRecord format
-    const developers = allMovies.map((movie, i) => movieToDeveloperRecord(movie, i, genreMap));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const developers = (allMovies || []).map((movie: any, i: number) => movieToDeveloperRecord(movie as any, i, genreMap));
 
     // Build stats
     const stats = {
-      total_developers: allMovies.length,
-      total_contributions: allMovies.reduce((sum, m) => sum + Math.round(m.popularity * 10), 0),
+      total_developers: (allMovies || []).length,
+      total_contributions: (allMovies || []).reduce((sum: number, m: any) => sum + Math.round(m.popularity * 10), 0),
     };
 
     // Also return raw movie data keyed by ID for the profile card
-    const movieIndex: Record<number, {
-      id: number;
-      title: string;
-      original_title: string;
-      overview: string;
-      poster_path: string | null;
-      backdrop_path: string | null;
-      release_date: string;
-      popularity: number;
-      vote_average: number;
-      vote_count: number;
-      genre_ids: number[];
-      original_language: string;
-    }> = {};
-    for (const movie of allMovies) {
-      movieIndex[movie.id] = {
-        id: movie.id,
-        title: movie.title,
-        original_title: movie.original_title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        release_date: movie.release_date,
-        popularity: movie.popularity,
-        vote_average: movie.vote_average,
-        vote_count: movie.vote_count,
-        genre_ids: movie.genre_ids,
-        original_language: movie.original_language,
-      };
+    const movieIndex: Record<number, any> = {};
+    for (const movie of (allMovies || [])) {
+      movieIndex[movie.id] = movie;
     }
 
     return NextResponse.json(

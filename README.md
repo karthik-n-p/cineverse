@@ -5,6 +5,7 @@
 </p>
 
 ---
+![Main Screen](public/screenshot.png)
 
 ## What is Cineverse?
 

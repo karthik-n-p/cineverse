@@ -12,7 +12,7 @@ export const metadata: Metadata = {
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000")
   ),
-  title: "Film City - Movies as a 3D City",
+  title: "Cineverse - Movies as a 3D City",
   description:
     "Explore movies from around the world as buildings in a 3D pixel art city. Filter by genre, language, and country.",
   keywords: [
@@ -25,10 +25,10 @@ export const metadata: Metadata = {
     "movie rankings",
   ],
   openGraph: {
-    title: "Film City - Movies as a 3D City",
+    title: "Cineverse - Movies as a 3D City",
     description:
       "Explore movies from around the world as buildings in a 3D pixel art city. Filter by genre, language, and country.",
-    siteName: "Film City",
+    siteName: "Cineverse",
     type: "website",
     locale: "en_US",
   },
@@ -50,7 +50,7 @@ const BASE_URL =
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Film City",
+  name: "Cineverse",
   description:
     "Explore movies from around the world as buildings in a 3D pixel art city",
   url: BASE_URL,
