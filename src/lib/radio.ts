@@ -5,10 +5,10 @@ export interface Track {
 }
 
 export const TRACKS: Track[] = [
-  { id: "midnight-commit", title: "Midnight Commit", src: "/audio/midnight-commit.mp3" },
-  { id: "push-to-prod", title: "Push to Prod", src: "/audio/push-to-prod.mp3" },
-  { id: "merge-conflict", title: "Merge Conflict", src: "/audio/merge-conflict.mp3" },
-  { id: "refactor-rain", title: "Refactor Rain", src: "/audio/refactor-rain.mp3" },
+  { id: "midnight-premiere", title: "Midnight Premiere", src: "/audio/midnight-premiere.mp3" },
+  { id: "final-cut", title: "Final Cut", src: "/audio/final-cut.mp3" },
+  { id: "creative-differences", title: "Creative Differences", src: "/audio/creative-differences.mp3" },
+  { id: "production-rain", title: "Production Rain", src: "/audio/production-rain.mp3" },
 ];
 
 export interface RadioState {

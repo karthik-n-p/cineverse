@@ -25,21 +25,21 @@ interface LoadingScreenProps {
 // ─── Constants ─────────────────────────────────────────────────
 
 const STAGE_MESSAGES: Record<string, string> = {
-  init: "Checking your browser...",
-  fetching: "Fetching developers...",
-  generating: "Laying down streets...",
-  rendering: "Building the skyline...",
-  ready: "Welcome to the city",
+  init: "Calibrating the lenses...",
+  fetching: "Casting the leads...",
+  generating: "Setting the stage...",
+  rendering: "Constructing the set...",
+  ready: "Curtains up! Welcome to Cineverse",
 };
 
 const TIPS = [
-  "Click any building to see that dev's profile",
-  "Use Fly Mode to cruise above the skyline",
-  "Taller buildings = more contributions",
-  "Try searching for your GitHub username",
-  "Buildings glow brighter with more recent activity",
-  "You can customize your building in the shop",
-  "Explore Mode shows the full city layout",
+  "Click any building to see movie details",
+  "Higher buildings represent blockbuster hits",
+  "Search for your favorite films or stars",
+  "Buildings glow based on box office success",
+  "Experience the magic of cinema in 3D",
+  "Fly through the city to discover hidden gems",
+  "Explore different regions and languages",
 ];
 
 // Pixel-art skyline building configs: [width, height, left%]

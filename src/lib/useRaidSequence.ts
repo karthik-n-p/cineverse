@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { CityBuilding } from "@/lib/github";
 import type { RaidPreviewResponse, RaidExecuteResponse } from "@/lib/raid";
-import { preloadRaidAudio, playRaidSound, stopRaidSound, fadeOutRaidSound, stopAllRaidSounds } from "@/lib/raidAudio";
+import { preloadCinemaAudio, playSceneSound, stopSceneSound, fadeOutSceneSound, stopAllSceneSounds } from "@/lib/cinemaAudio";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -65,7 +65,7 @@ export function useRaidSequence(): [RaidState, RaidActions] {
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      stopAllRaidSounds();
+      stopAllSceneSounds();
     };
   }, []);
 
@@ -81,29 +81,29 @@ export function useRaidSequence(): [RaidState, RaidActions] {
     // Audio triggers
     switch (phase) {
       case "intro":
-        preloadRaidAudio();
-        playRaidSound("takeoff");
+        preloadCinemaAudio();
+        playSceneSound("takeoff");
         break;
       case "flight":
-        playRaidSound("flight");
+        playSceneSound("flight");
         break;
       case "attack":
-        stopRaidSound("flight");
+        stopSceneSound("flight");
         break;
       case "outro_win":
-        stopAllRaidSounds();
+        stopAllSceneSounds();
         // explosion already played by 3D component at climax
-        playRaidSound("victory");
+        playSceneSound("victory");
         break;
       case "outro_lose":
-        stopAllRaidSounds();
-        playRaidSound("crash");
-        setTimeout(() => playRaidSound("defeat"), 500);
+        stopAllSceneSounds();
+        playSceneSound("crash");
+        setTimeout(() => playSceneSound("defeat"), 500);
         break;
       case "share":
       case "done":
       case "idle":
-        stopAllRaidSounds();
+        stopAllSceneSounds();
         break;
     }
 
@@ -235,8 +235,8 @@ export function useRaidSequence(): [RaidState, RaidActions] {
         });
 
         // Start audio
-        preloadRaidAudio();
-        playRaidSound("takeoff");
+        preloadCinemaAudio();
+        playSceneSound("takeoff");
 
         // Auto-advance intro -> flight
         timerRef.current = setTimeout(() => setPhase("flight"), 4500);
@@ -287,7 +287,7 @@ export function useRaidSequence(): [RaidState, RaidActions] {
 
   const exitRaid = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    stopAllRaidSounds();
+    stopAllSceneSounds();
     setState(INITIAL_STATE);
   }, []);
 

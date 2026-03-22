@@ -6,7 +6,7 @@ import * as THREE from "three";
 import type { RaidPhase } from "@/lib/useRaidSequence";
 import type { RaidExecuteResponse } from "@/lib/raid";
 import type { CityBuilding } from "@/lib/github";
-import { playRaidSound } from "@/lib/raidAudio";
+import { playSceneSound } from "@/lib/cinemaAudio";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -541,7 +541,7 @@ function ProjectilePool({ active, vehicleRef, targetPos, onImpact }: {
       if (p.pos.distanceTo(targetPos) < 10) {
         p.alive = false;
         impactCount.current++;
-        if (impactCount.current % 2 === 0) playRaidSound("impact");
+        if (impactCount.current % 2 === 0) playSceneSound("impact");
         if (impactCount.current >= PROJECTILE_COUNT * 0.8) onImpact();
       }
 
@@ -1061,7 +1061,7 @@ export default function RaidSequence3D({ phase, attacker, defender, raidData, on
         // Sound at 1s
         if (t >= 1.0 && !soundPlayed.current) {
           soundPlayed.current = true;
-          playRaidSound("shoot");
+          playSceneSound("shoot");
         }
 
         // Progressive shake during strafing (2s+)
@@ -1075,12 +1075,12 @@ export default function RaidSequence3D({ phase, attacker, defender, raidData, on
           climaxTriggered.current = true;
           if (raidData?.success) {
             triggerShake(4.0);
-            playRaidSound("explosion");
+            playSceneSound("explosion");
             debrisActive.current = true;
             shockwaveActive.current = true;
           } else {
             triggerShake(1.5);
-            playRaidSound("shield_hit");
+            playSceneSound("shield_hit");
             hitIntensityRef.current = 1;
           }
           forceRender(n => n + 1);
