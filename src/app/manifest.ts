@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Git City",
-    short_name: "Git City",
+    name: "Cineverse",
+    short_name: "Cineverse",
     description:
-      "Explore GitHub users as buildings in a 3D pixel art city. Fly through the city and discover developers.",
+      "Explore movies from around the world as buildings in a 3D pixel art city. Filter by genre, language, and country.",
     start_url: "/",
     display: "standalone",
     background_color: "#0d1117",

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000")
   ),
-  title: "Cineverse - Movies as a 3D City",
+  title: "Cineverse",
   description:
     "Explore movies from around the world as buildings in a 3D pixel art city. Filter by genre, language, and country.",
   keywords: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "movie rankings",
   ],
   openGraph: {
-    title: "Cineverse - Movies as a 3D City",
+    title: "Cineverse",
     description:
       "Explore movies from around the world as buildings in a 3D pixel art city. Filter by genre, language, and country.",
     siteName: "Cineverse",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
     apple: "/apple-icon.png",
   },
 };

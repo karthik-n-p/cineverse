@@ -466,7 +466,7 @@ function HomeContent() {
   // ─── Load saved theme ─────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = localStorage.getItem("filmcity_theme");
+    const saved = localStorage.getItem("cineverse_theme");
     if (saved !== null) {
       const n = parseInt(saved, 10);
       if (n >= 0 && n <= 3) setThemeIndex(n);
@@ -485,7 +485,7 @@ function HomeContent() {
   const cycleTheme = useCallback(() => {
     setThemeIndex((i) => {
       const next = (i + 1) % THEMES.length;
-      localStorage.setItem("filmcity_theme", String(next));
+      localStorage.setItem("cineverse_theme", String(next));
       return next;
     });
   }, []);
@@ -701,8 +701,7 @@ function HomeContent() {
             <div className="flex items-center gap-2">
               <Film size={16} style={{ color: theme.accent }} />
               <h1 className="text-[13px] sm:text-[15px] font-bold tracking-widest uppercase">
-                <span style={{ color: theme.accent }}>FILM</span>
-                <span className="text-cream">CITY</span>
+                <span className="text-cream">CINEVERSE</span>
               </h1>
             </div>
             <p className="text-[9px] text-muted mt-0.5 normal-case">

@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const alt = "Git City - Your GitHub as a 3D City";
+export const alt = "Cineverse - Movies as a 3D City";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -104,8 +104,7 @@ export default async function Image() {
               textTransform: "uppercase",
             }}
           >
-            <span style={{ fontSize: 110, color: cream }}>GIT</span>
-            <span style={{ fontSize: 110, color: accent }}>CITY</span>
+            <span style={{ fontSize: 110, color: cream }}>CINEVERSE</span>
           </div>
           <div
             style={{
@@ -116,8 +115,8 @@ export default async function Image() {
               gap: 10,
             }}
           >
-            <span style={{ color: muted }}>Where code</span>
-            <span style={{ color: accent }}>builds cities</span>
+            <span style={{ color: muted }}>Where movies</span>
+            <span style={{ color: accent }}>build cities</span>
           </div>
         </div>
 
