@@ -1,0 +1,121 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
+
+// ---------------------------------------------------------------------------
+// Route-specific rate limits: [maxRequests, windowMs]
+// ---------------------------------------------------------------------------
+const ROUTE_LIMITS: [string, number, number][] = [
+  // Exact-prefix match – order from most-specific to least-specific
+  ["/api/customizations/upload", 5, 60_000],
+  ["/api/customizations", 10, 60_000],
+  ["/api/sky-ads/track", 30, 60_000],
+  ["/api/sky-ads", 30, 60_000],
+  ["/api/ads/auth", 5, 60_000],
+  ["/api/ads", 30, 60_000],
+  ["/api/v1/ads", 60, 60_000],
+  ["/api/raid", 15, 60_000],
+  ["/api/checkin", 10, 60_000],
+  ["/api/heartbeats", 60, 60_000],
+  ["/api/interactions/kudos", 20, 60_000],
+  ["/api/interactions/visit", 50, 60_000],
+  ["/api/interactions", 60, 60_000],
+  ["/api/achievements", 30, 60_000],
+  ["/api/loadout", 10, 60_000],
+  ["/api/feed", 30, 60_000],
+  ["/api/checkout/status", 40, 60_000],
+  ["/api/checkout", 6, 60_000],
+  ["/api/claim", 5, 60_000],
+  ["/api/city", 30, 60_000],
+  ["/api/dev/", 60, 60_000],
+  ["/api/items", 30, 60_000],
+  ["/api/auth", 10, 60_000],
+];
+
+const DEFAULT_API: [number, number] = [60, 60_000];
+const DEFAULT_PAGE: [number, number] = [120, 60_000];
+
+function getLimitForPath(pathname: string): {
+  limit: number;
+  window: number;
+  group: string;
+} {
+  // Webhooks are called by trusted third-parties (Stripe, AbacatePay) –
+  // they verify signatures, so we don't rate-limit them.
+  if (pathname.startsWith("/api/webhooks")) {
+    return { limit: 1000, window: 60_000, group: "webhooks" };
+  }
+
+  for (const [prefix, limit, window] of ROUTE_LIMITS) {
+    if (pathname.startsWith(prefix)) {
+      return { limit, window, group: prefix };
+    }
+  }
+
+  if (pathname.startsWith("/api/")) {
+    return { limit: DEFAULT_API[0], window: DEFAULT_API[1], group: "/api" };
+  }
+
+  return { limit: DEFAULT_PAGE[0], window: DEFAULT_PAGE[1], group: "/pages" };
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Middleware
+// ---------------------------------------------------------------------------
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ── 1. Rate Limit ────────────────────────────────────────────────────
+  const ip = getClientIp(request);
+  const { limit, window, group } = getLimitForPath(pathname);
+  const key = `${ip}:${group}`;
+  const { ok, remaining, reset } = rateLimit(key, limit, window);
+
+  if (!ok) {
+    return new NextResponse(
+      JSON.stringify({ error: "Too many requests. Please slow down." }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+          "X-RateLimit-Limit": String(limit),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(Math.ceil(reset / 1000)),
+        },
+      },
+    );
+  }
+
+  // ── 2. Route Handling ────────────────────────────────────────────────
+  let response = NextResponse.next({ request });
+
+  // ── 3. Security headers ─────────────────────────────────────────────
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  // ── 4. Attach rate-limit headers so clients can self-throttle ────────
+  response.headers.set("X-RateLimit-Limit", String(limit));
+  response.headers.set("X-RateLimit-Remaining", String(remaining));
+  response.headers.set(
+    "X-RateLimit-Reset",
+    String(Math.ceil(reset / 1000)),
+  );
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|models|fonts|api/cron).*)",
+  ],
+};
